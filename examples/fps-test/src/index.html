@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPS Test — tauri-plugin-macos-fps</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    h1 {
+      font-size: 14px;
+      font-weight: 500;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    #fps {
+      font-size: 120px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      margin-bottom: 4px;
+      transition: color 0.3s;
+    }
+    #fps.low { color: #ff4444; }
+    #fps.mid { color: #ffaa00; }
+    #fps.high { color: #44ff88; }
+    #unit {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 40px;
+    }
+    .info {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 32px;
+      font-size: 13px;
+      color: #888;
+    }
+    .info span { font-weight: 600; color: #ccc; }
+    #toggle {
+      padding: 12px 32px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #toggle:hover { background: #252525; border-color: #555; }
+    #toggle.locked { border-color: #ff4444; color: #ff4444; }
+    #toggle.unlocked { border-color: #44ff88; color: #44ff88; }
+    #status {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #666;
+      height: 16px;
+    }
+    #graph {
+      width: 500px;
+      height: 60px;
+      margin-top: 24px;
+      border: 1px solid #222;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <h1>requestAnimationFrame</h1>
+  <div id="fps">--</div>
+  <div id="unit">frames per second</div>
+
+  <div class="info">
+    <div>Min: <span id="min">--</span></div>
+    <div>Max: <span id="max">--</span></div>
+    <div>Avg: <span id="avg">--</span></div>
+    <div>Frames: <span id="total">0</span></div>
+  </div>
+
+  <button id="toggle" class="unlocked">FPS Unlocked (click to lock)</button>
+  <div id="status"></div>
+
+  <div id="graph">
+    <canvas id="canvas" width="500" height="60"></canvas>
+  </div>
+
+  <script>
+    const { invoke } = window.__TAURI__.core;
+
+    const fpsEl = document.getElementById('fps');
+    const minEl = document.getElementById('min');
+    const maxEl = document.getElementById('max');
+    const avgEl = document.getElementById('avg');
+    const totalEl = document.getElementById('total');
+    const toggleBtn = document.getElementById('toggle');
+    const statusEl = document.getElementById('status');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let unlocked = true;
+    let frames = 0;
+    let totalFrames = 0;
+    let lastTime = performance.now();
+    let fpsHistory = [];
+    let graphData = new Array(500).fill(0);
+    let minFps = Infinity;
+    let maxFps = 0;
+    let fpsSum = 0;
+    let fpsSamples = 0;
+
+    function updateFpsDisplay(fps) {
+      fpsEl.textContent = fps;
+      fpsEl.className = fps > 80 ? 'high' : fps > 55 ? 'mid' : 'low';
+
+      if (fps < minFps) { minFps = fps; minEl.textContent = fps; }
+      if (fps > maxFps) { maxFps = fps; maxEl.textContent = fps; }
+      fpsSum += fps;
+      fpsSamples++;
+      avgEl.textContent = Math.round(fpsSum / fpsSamples);
+
+      graphData.push(fps);
+      graphData.shift();
+      drawGraph();
+    }
+
+    function drawGraph() {
+      ctx.clearRect(0, 0, 500, 60);
+
+      // 60fps reference line
+      const y60 = 60 - (60 / 180 * 60);
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, y60);
+      ctx.lineTo(500, y60);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // FPS line
+      ctx.strokeStyle = unlocked ? '#44ff88' : '#ff4444';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i < graphData.length; i++) {
+        const y = 60 - (graphData[i] / 180 * 60);
+        if (i === 0) ctx.moveTo(i, y);
+        else ctx.lineTo(i, y);
+      }
+      ctx.stroke();
+    }
+
+    function measure(now) {
+      frames++;
+      totalFrames++;
+      totalEl.textContent = totalFrames;
+
+      if (now - lastTime >= 500) {
+        const fps = Math.round(frames * 1000 / (now - lastTime));
+        updateFpsDisplay(fps);
+        frames = 0;
+        lastTime = now;
+      }
+
+      requestAnimationFrame(measure);
+    }
+
+    toggleBtn.addEventListener('click', async () => {
+      try {
+        if (unlocked) {
+          await invoke('lock_fps');
+          unlocked = false;
+          toggleBtn.textContent = 'FPS Locked at 60 (click to unlock)';
+          toggleBtn.className = 'locked';
+          statusEl.textContent = '60fps cap re-enabled';
+        } else {
+          await invoke('unlock_fps');
+          unlocked = true;
+          toggleBtn.textContent = 'FPS Unlocked (click to lock)';
+          toggleBtn.className = 'unlocked';
+          statusEl.textContent = 'Native refresh rate enabled';
+        }
+        // Reset stats on toggle
+        minFps = Infinity;
+        maxFps = 0;
+        fpsSum = 0;
+        fpsSamples = 0;
+        minEl.textContent = '--';
+        maxEl.textContent = '--';
+        avgEl.textContent = '--';
+      } catch (e) {
+        statusEl.textContent = 'Error: ' + e;
+      }
+    });
+
+    requestAnimationFrame(measure);
+  </script>
+</body>
+</html>
